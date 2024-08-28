@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+.note-container {
+    --color-primary:#FFD700;
+    --color-secondary:#FFFAE3;
+    position: fixed;
+    background-color: var(--color-primary);
+    top:20px;
+    left:20px;
+    z-index: 99999;
+    border-radius: 6px;
+    padding: 5px 0.5% 5px 0.5%;
+    min-width: 318px;
+}
+
+.note-container * {
+    font-family: 'Roboto', Courier;
+    color: black;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.note-container textarea {
+    background-color: var(--color-secondary);
+    border-radius: 6px;
+    border: none;
+    min-width: 318px;
+    min-height: 100px;
+    padding: 5px;
+}
+
+.note-container textarea:focus {
+    outline: none;
+}
+
+.note-container .header {
+    cursor: move;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
+    padding: 2px;
+}
+
+.note-container .title{
+    background-color: var(--color-primary);
+    border: none;
+    margin-left: 4px;
+    width: clamp(50px,30%,500px);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.note-container .title:focus {
+    outline: none;
+}
+
+.note-container .buttons {
+    display: flex;
+    gap: 10px;
+    width: clamp(60px,25%,100px);;
+    justify-content: space-between;
+}
+
+.note-container .buttons i {
+    cursor: pointer;
+}
+
+.notesX-hidden {
+    display: none !important;
+}
+
+.note-container .colors {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 3px;
+    margin-left: -77px;
+}
+
+.note-container .color {
+    width: 15px;
+    height: 15px;
+    border: 1px solid black;
+    cursor: pointer;
+}
