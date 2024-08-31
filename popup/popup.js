@@ -9,7 +9,7 @@ const renderNote = function(noteData){
     note.innerHTML = `
     <div class="heading">
         <div class="title">${noteData.title}</div>
-        <div class="url"><a href="${noteData.url}">${noteData.url}</a></div>
+        <div class="url"><a target="_blank" href="${noteData.url}">${noteData.url}</a></div>
     </div>
     <div class="text">${noteData.description}</div>`
     notesContainer.appendChild(note);
