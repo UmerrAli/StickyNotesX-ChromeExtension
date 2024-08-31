@@ -5,7 +5,7 @@ link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.m
 link.integrity = "sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==";
 link.crossOrigin = "anonymous";
 link.referrerPolicy = "no-referrer";
-document.head.appendChild(link);
+document.head.prepend(link);
 
 let activeElement = null;
 let offsetX, offsetY;
@@ -13,18 +13,14 @@ let offsetX, offsetY;
 // Create a container for sticky notes
 const stickyNotesContainer = document.createElement('div');
 stickyNotesContainer.id = 'sticky-notes-container';
-document.body.appendChild(stickyNotesContainer);
-
-const addStickyContainer = function (noteData = {}) {
+document.documentElement.prepend(stickyNotesContainer);
+const addStickyNote = function(noteData = {}) {
     const container = document.createElement('div');
-    const uniqueId = 'note-container-' + new Date().getTime();
-    container.id = uniqueId;
     container.classList.add('note-container');
-    container.classList.add('yellow');
     
     container.innerHTML = `
     <div class="header">
-        <input class="title yellow" placeholder="Title" value="${noteData.title || ''}">
+        <input class="title" placeholder="Title" value="${noteData.title || 'Title'}">
         <div class="buttons">
             <div class="colors notesX-hidden">
                 <div class="yellow color" style="background-color:#FFD700;"></div>
@@ -36,7 +32,7 @@ const addStickyContainer = function (noteData = {}) {
             <i class="fa-solid fa-minus minus-btn" style="font-size: 18px;"></i>
         </div>
     </div>
-    <textarea class="yellow notesX-hidden" name="note" placeholder="Write your notes!">${noteData.description || ''}</textarea>`;
+    <textarea name="note" placeholder="Write your notes here!">${noteData.description || ''}</textarea>`;
 
     container.style.setProperty('--color-primary', noteData.colorPrimary || '#FFD700');
     container.style.setProperty('--color-secondary', noteData.colorSecondary || '#FFFAE3');
@@ -46,25 +42,80 @@ const addStickyContainer = function (noteData = {}) {
     stickyNotesContainer.appendChild(container);
 };
 
+const applyColor = function(noteContainer, primaryColor, secondaryColor) {
+    noteContainer.style.setProperty('--color-primary', primaryColor);
+    noteContainer.style.setProperty('--color-secondary', secondaryColor);
+}
+
+// storing notes
+const saveNotesToStorage = function() {
+    const url = window.location.href;
+    const notes = [];
+    
+    document.querySelectorAll('.note-container').forEach(note => {
+        const title = note.querySelector('.title').value;
+        const description = note.querySelector('textarea').value;
+        const colorPrimary = getComputedStyle(note).getPropertyValue('--color-primary').trim();
+        const colorSecondary = getComputedStyle(note).getPropertyValue('--color-secondary').trim();
+        const position = {
+            top: note.style.top,
+            left: note.style.left
+        };
+        notes.push({
+            title,
+            description,
+            colorPrimary,
+            colorSecondary,
+            position,
+            url
+        });
+    });
+
+    chrome.storage.local.get('notesData', (data) => {
+        data.notesData = data.notesData || {};
+        data.notesData[url] = notes;
+        chrome.storage.local.set({ notesData: data.notesData });
+    });
+}   
+
+const loadNotesFromStorage = function() {
+    const url = window.location.href;
+    chrome.storage.local.get('notesData', (data) => {
+        if (data.notesData && data.notesData[url]) {
+            data.notesData[url].forEach(noteData => {
+                addStickyNote(noteData);
+            });
+        }
+    });
+}
+
 // Making note container draggable
+const onMouseMove = function(e) {
+    if (activeElement) {
+        activeElement.style.left = `${e.clientX - offsetX}px`;
+        activeElement.style.top = `${e.clientY - offsetY}px`;
+    }
+}
+
+const updatePosition = function(e) {
+    requestAnimationFrame(() => onMouseMove(e));
+}
+
 stickyNotesContainer.addEventListener('mousedown', (e) => {
     if (e.target.classList.contains('header')) {
         activeElement = e.target.parentElement;
         offsetX = e.clientX - activeElement.offsetLeft;
         offsetY = e.clientY - activeElement.offsetTop;
-    }
-});
-
-stickyNotesContainer.addEventListener('mousemove', (e) => {
-    if (activeElement) {
-        activeElement.style.left = `${e.clientX - offsetX}px`;
-        activeElement.style.top = `${e.clientY - offsetY}px`;
+        document.addEventListener('mousemove', updatePosition);
     }
 });
 
 stickyNotesContainer.addEventListener('mouseup', () => {
-    saveNotesToStorage();
-    activeElement = null;
+    if (activeElement) {
+        saveNotesToStorage();
+        activeElement = null;
+        document.removeEventListener('mousemove', updatePosition);
+    }
 });
 
 // Handle clicks for minimize, delete, and color toggle
@@ -82,76 +133,36 @@ stickyNotesContainer.addEventListener('click', (e) => {
         colors.classList.toggle('notesX-hidden');
     } else if (e.target.classList.contains('color')) {
         if (e.target.classList.contains('yellow')){
-            noteContainer.style.setProperty('--color-primary', '#FFD700');
-            noteContainer.style.setProperty('--color-secondary', '#FFFAE3');
+            applyColor(noteContainer, '#FFD700', '#FFFAE3');
         } else if (e.target.classList.contains('blue')){
-            noteContainer.style.setProperty('--color-primary', '#0044CC');
-            noteContainer.style.setProperty('--color-secondary', '#ADD8E6');
+            applyColor(noteContainer, '#0044CC', '#ADD8E6');
         }  else {
-            noteContainer.style.setProperty('--color-primary', '#ff0000');
-            noteContainer.style.setProperty('--color-secondary', '#FFCCCC');
+            applyColor(noteContainer, '#ff0000', '#FFCCCC');
         }
         saveNotesToStorage();
     }
 });
 
-// storing notes
-function saveNotesToStorage() {
-    const url = window.location.href;
-    const notes = [];
-    
-    document.querySelectorAll('.note-container').forEach(note => {
-        const title = note.querySelector('.title').value;
-        const description = note.querySelector('textarea').value;
-        const colorPrimary = getComputedStyle(note).getPropertyValue('--color-primary').trim();
-        const colorSecondary = getComputedStyle(note).getPropertyValue('--color-secondary').trim();
-        const position = {
-            top: note.style.top,
-            left: note.style.left
-        };
-
-        notes.push({
-            title,
-            description,
-            colorPrimary,
-            colorSecondary,
-            position
-        });
-    });
-
-    chrome.storage.local.get('notesData', (data) => {
-        data.notesData = data.notesData || {};
-        data.notesData[url] = notes;
-        chrome.storage.local.set({ notesData: data.notesData });
-    });
-}
-
-function loadNotesFromStorage() {
-    const url = window.location.href;
-
-    chrome.storage.local.get('notesData', (data) => {
-        if (data.notesData && data.notesData[url]) {
-            data.notesData[url].forEach(noteData => {
-                addStickyContainer(noteData);
-            });
-        }
-    });
-}
-
-// Load the notes when the content script is loaded
-loadNotesFromStorage();
-
-// when user click on add button from popup
+// When user click on add button from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "addSticky") {
-        addStickyContainer();
+        addStickyNote();
         saveNotesToStorage(); 
-        sendResponse({ status: "note added" });
+    } else if (request.action === "clearAll") {
+        chrome.storage.local.clear();
+        document.querySelectorAll('.note-container').forEach(note => note.remove());
     }
+    sendResponse({status:"done"})
+    return true;
 });
 
 // Save after input change
 stickyNotesContainer.addEventListener('input', () => {
     saveNotesToStorage();  
 });
+
+link.onload = () => loadNotesFromStorage();
+
+
+
 

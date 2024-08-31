@@ -5,12 +5,11 @@
     --color-secondary:#FFFAE3;
     position: fixed;
     background-color: var(--color-primary);
-    top:20px;
-    left:20px;
     z-index: 99999;
     border-radius: 6px;
     padding: 5px 0.5% 5px 0.5%;
     min-width: 318px;
+    opacity: 95%;
 }
 
 .note-container * {
@@ -27,6 +26,7 @@
     min-width: 318px;
     min-height: 100px;
     padding: 5px;
+    resize: both !important;
 }
 
 .note-container textarea:focus {
@@ -62,7 +62,7 @@
     justify-content: space-between;
 }
 
-.note-container .buttons i {
+.note-container  i {
     cursor: pointer;
 }
 

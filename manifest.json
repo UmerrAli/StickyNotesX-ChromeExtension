@@ -1,17 +1,17 @@
 {
-    "manifest_version": 3,
-    "name": "StickyNotesX",
-    "description": "Sticky Notes for Web",
-    "version": "1.0",
-    "action": {
-      "default_popup": "popup/popup.html",
-      "default_icon": "images/icon-16.png"
-    },
-    "permissions": ["storage","activeTab"],
-    "content_scripts": [
+  "manifest_version": 3,
+  "name": "StickyNotesX",
+  "description": "Sticky Notes for Web",
+  "version": "1.0",
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": "images/icon-16.png"
+  },
+  "permissions": ["storage","activeTab"],
+  "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "css": ["content-style.css"],
+      "css": ["content.css"],
       "js": ["content.js"]
     }
   ],
@@ -21,4 +21,4 @@
     "48": "images/icon-48.png",
     "128": "images/icon-128.png"
   }
-  }
+}
